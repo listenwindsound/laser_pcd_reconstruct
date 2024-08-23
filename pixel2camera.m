@@ -1,0 +1,35 @@
+
+
+function[point]=pixel2camera(line,foldername)
+% clear;clc
+% line=importdata('result\pixel_cor\jg_vu1.txt');
+
+
+
+
+lasercalib_mat_path=strcat("APP\",foldername,"\laser_calib_campar.mat");
+pixel_vu_folder=strcat('data_laser_calib\',foldername,'\pixel_vu\');
+[A,B,C,D]=laser_plane_par(lasercalib_mat_path,pixel_vu_folder);
+
+
+camcalib_mat_path=strcat("APP\",foldername,"cameraParams.mat");
+par=load(camcalib_mat_path);
+
+% out_par=par.cameraParams.PatternExtrinsics;
+iner_par=par.cameraParams.Intrinsics;
+fx=iner_par.FocalLength(1);
+fy=iner_par.FocalLength(2);
+cx=iner_par.PrincipalPoint(1);
+cy=iner_par.PrincipalPoint(2);
+v=line(:,1);
+u=line(:,2);
+%以论文（3）式为基础，与激光平面Ax+By+Cz+D=0联立，
+Zc=(-D)./((A*(u-cx)/fx)+(B*(v-cy)/fy)+C);
+Xc=Zc.*(u-cx)/fx;
+Yc=Zc.*(v-cy)/fy;
+
+point=[Xc,Yc,Zc];
+
+
+
+end

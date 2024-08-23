@@ -1,0 +1,82 @@
+
+function[A,B,C,D]=laser_plane_par(mat_path)
+%求出激光平面在相机坐标系下的表达式方程参数A,B,C,D。 Ax+By+Cz+D=0
+
+% mat_path="APP\correct\laser_calib_campar.mat"
+
+par=load(mat_path);
+
+% par=load("APP\correct\laser_calib_campar.mat");
+% par=load("APP\correct_camera_par19.mat");
+
+
+
+% 指定包含 Excel 文件的文件夹路径
+folderPath = 'pixel_vu\correct_laser_calib_vu_3xishu\'; % 替换为你的文件夹路径
+out_par=par.cameraParams.PatternExtrinsics;
+iner_par=par.cameraParams.Intrinsics;
+fx=iner_par.FocalLength(1);
+fy=iner_par.FocalLength(2);
+cx=iner_par.PrincipalPoint(1);
+cy=iner_par.PrincipalPoint(2);
+
+
+% 获取文件夹中的所有文件
+fileList = dir(fullfile(folderPath, '*.txt')); % 这里假设你的文件都是 .xlsx 格式的，如果不是，需要相应地更改文件过滤器。
+
+
+% filePrefix = 'jg_vu'; % 替换为你的特定字符
+
+
+plane_point=[];
+num=size(out_par,1);
+for ci=1:num
+    % 循环遍历文件列表并逐个读取以特定字符开头的 Excel 表格
+    for i = 1:length(fileList)
+        
+        % 获取文件名
+        fileName = fileList(i).name;
+        % 使用正则表达式提取数字
+        numbers = regexp(fileName, '\d+(\.\d+)?', 'match');
+        % 将提取的数字转换为数值
+        numericValues = str2double(numbers);
+        if  numericValues==ci
+            filePath = fullfile(folderPath, fileName);
+            line=importdata(filePath);
+            A=out_par(ci).A;
+            line_point=one_line_camera_xyz(line,fx,fy,cx,cy,A);
+            plane_point=vertcat(plane_point,line_point);
+        else
+            continue
+        end
+            
+        
+    end
+end
+
+% 
+% figure()
+% pcshow(pointCloud(plane_point))
+
+
+[A,B,C,D]=fitplane_2multiply_v2(plane_point);
+
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
